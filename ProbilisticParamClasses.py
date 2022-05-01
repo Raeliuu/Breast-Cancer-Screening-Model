@@ -26,103 +26,94 @@ class ParameterGenerator:
 
         self.therapy = therapy
         self.race = race                    # patient's race
-        self.transRateMatrixRVG_NO = []     # list of beta distributions for mu2/(mu2+mu3) given known (mu2+mu3)
-        self.transRateMatrixRVG_BI = []     # list of beta distributions for mu2/(mu2+mu3) given known (mu2+mu3)
-        self.annualStateCostRVG = []  # list of gamma distributions for the annual cost of states
-        self.annualStateUtilityRVG = []  # list of beta distributions for the annual utility of states
-        self.annualTreatmentCostRVG = None   # gamma distribution for treatment cost
+        self.probMatrixRVG = []     # list of dirichlet distributions for transition probabilities
+        self.annualStateCostRVG = []  # list of normal distributions for the annual cost of states
+        self.annualStateUtilityRVG = []  # list of uniform distributions for the annual utility of states
 
-        # create gamma distributions for annual state cost
-        for cost in Data.ANNUAL_STATE_COST:
-
-            # if cost is zero, add a constant 0, otherwise add a gamma distribution
-            if cost == 0:
-                self.annualStateCostRVG.append(RVGs.Constant(value=0))
-            else:
-                # find shape and scale of the assumed gamma distribution
-                # no data available to estimate the standard deviation, so we assumed st_dev=cost / 5
-                fit_output = RVGs.Gamma.fit_mm(mean=cost, st_dev=cost / 5)
-                # append the distribution
-                self.annualStateCostRVG.append(
-                    RVGs.Gamma(a=fit_output["a"],
-                               loc=0,
-                               scale=fit_output["scale"]))
-
-        # create a gamma distribution for annual treatment cost
+        # treatment cost
         if self.therapy == Therapies.NO:
-            annual_cost = Data.NO_COST
+            self.annualTreatmentCost = Data.NO_COST
         else:
-            annual_cost = Data.NO_COST + Data.BI_COST
-        fit_output = RVGs.Gamma.fit_mm(mean=annual_cost, st_dev=annual_cost / 5)
-        self.annualTreatmentCostRVG = RVGs.Gamma(a=fit_output["a"],
-                                                 loc=0,
-                                                 scale=fit_output["scale"])
+            self.annualTreatmentCost = Data.NO_COST + Data.BI_COST
 
-        # create beta distributions for annual state utility
+        # create Dirichlet distributions for transition probabilities
+        j = 0
+        if self.race == Races.White:
+            if self.therapy == Therapies.NO:
+                for probs in Data.TRANS_MATRIX_N0_W:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+            else:
+                for probs in Data.TRANS_MATRIX_BI_W:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+
+        elif self.race == Races.Black:
+            if self.therapy == Therapies.NO:
+                for probs in Data.TRANS_MATRIX_N0_B:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+            else:
+                for probs in Data.TRANS_MATRIX_BI_B:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+
+        elif self.race == Races.AIAN:
+            if self.therapy == Therapies.NO:
+                for probs in Data.TRANS_MATRIX_N0_AIAN:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+            else:
+                for probs in Data.TRANS_MATRIX_BI_AIAN:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+
+        elif self.race == Races.Hispanic:
+            if self.therapy == Therapies.NO:
+                for probs in Data.TRANS_MATRIX_N0_H:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+            else:
+                for probs in Data.TRANS_MATRIX_BI_H:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+
+        else:
+            if self.therapy == Therapies.NO:
+                for probs in Data.TRANS_MATRIX_N0_API:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+            else:
+                for probs in Data.TRANS_MATRIX_BI_API:
+                    self.probMatrixRVG.append(RVGs.Dirichlet(a=probs, if_ignore_0s=True))
+                    j += 1
+
+
+        # create normal distributions for annual state cost
+        for cost in Data.ANNUAL_STATE_COST[1:3]:
+            self.annualStateCostRVG.append(RVGs.Normal(loc=cost, scale=cost/4))
+
+        # create uniform distributions for annual state utility
         if self.race == Races.White:
             for utility in Data.ANNUAL_STATE_UTILITY_W:
-                # if utility is zero, add a constant 0, otherwise add a beta distribution
-                if utility == 0:
-                    self.annualStateCostRVG.append(RVGs.Constant(value=0))
-                else:
-                    # find alpha and beta of the assumed beta distribution
-                    # no data available to estimate the standard deviation, so we assumed st_dev=cost / 4
-                    fit_output = RVGs.Beta.fit_mm(mean=utility, st_dev=utility / 4)
-                    # append the distribution
-                    self.annualStateUtilityRVG.append(
-                        RVGs.Beta(a=fit_output["a"], b=fit_output["b"]))
+                self.annualStateUtilityRVG.append(RVGs.Uniform(scale=utility, loc=0.5*utility))
 
-        if self.race == Races.Black:
-            for utility in Data.ANNUAL_STATE_UTILITY_B:
-                # if utility is zero, add a constant 0, otherwise add a beta distribution
-                if utility == 0:
-                    self.annualStateCostRVG.append(RVGs.Constant(value=0))
-                else:
-                    # find alpha and beta of the assumed beta distribution
-                    # no data available to estimate the standard deviation, so we assumed st_dev=cost / 4
-                    fit_output = RVGs.Beta.fit_mm(mean=utility, st_dev=utility / 4)
-                    # append the distribution
-                    self.annualStateUtilityRVG.append(
-                        RVGs.Beta(a=fit_output["a"], b=fit_output["b"]))
+        elif self.race == Races.Black:
+            for utility in Data.ANNUAL_STATE_UTILITY_W:
+                self.annualStateUtilityRVG.append(RVGs.Uniform(scale=utility, loc=0.5*utility))
 
-            if self.race == Races.Hispanic:
-                for utility in Data.ANNUAL_STATE_UTILITY_H:
-                    # if utility is zero, add a constant 0, otherwise add a beta distribution
-                    if utility == 0:
-                        self.annualStateCostRVG.append(RVGs.Constant(value=0))
-                    else:
-                        # find alpha and beta of the assumed beta distribution
-                        # no data available to estimate the standard deviation, so we assumed st_dev=cost / 4
-                        fit_output = RVGs.Beta.fit_mm(mean=utility, st_dev=utility / 4)
-                        # append the distribution
-                        self.annualStateUtilityRVG.append(
-                            RVGs.Beta(a=fit_output["a"], b=fit_output["b"]))
+        elif self.race == Races.Hispanic:
+            for utility in Data.ANNUAL_STATE_UTILITY_W:
+                self.annualStateUtilityRVG.append(RVGs.Uniform(scale=utility, loc=0.5*utility))
 
-            if self.race == Races.AIAN:
-                for utility in Data.ANNUAL_STATE_UTILITY_AIAN:
-                    # if utility is zero, add a constant 0, otherwise add a beta distribution
-                    if utility == 0:
-                        self.annualStateCostRVG.append(RVGs.Constant(value=0))
-                    else:
-                        # find alpha and beta of the assumed beta distribution
-                        # no data available to estimate the standard deviation, so we assumed st_dev=cost / 4
-                        fit_output = RVGs.Beta.fit_mm(mean=utility, st_dev=utility / 4)
-                        # append the distribution
-                        self.annualStateUtilityRVG.append(
-                            RVGs.Beta(a=fit_output["a"], b=fit_output["b"]))
+        elif self.race == Races.AIAN:
+            for utility in Data.ANNUAL_STATE_UTILITY_W:
+                self.annualStateUtilityRVG.append(RVGs.Uniform(scale=utility, loc=0.5*utility))
 
-            if self.race == Races.API:
-                for utility in Data.ANNUAL_STATE_UTILITY_API:
-                    # if utility is zero, add a constant 0, otherwise add a beta distribution
-                    if utility == 0:
-                        self.annualStateCostRVG.append(RVGs.Constant(value=0))
-                    else:
-                        # find alpha and beta of the assumed beta distribution
-                        # no data available to estimate the standard deviation, so we assumed st_dev=cost / 4
-                        fit_output = RVGs.Beta.fit_mm(mean=utility, st_dev=utility / 4)
-                        # append the distribution
-                        self.annualStateUtilityRVG.append(
-                            RVGs.Beta(a=fit_output["a"], b=fit_output["b"]))
+        else:
+            for utility in Data.ANNUAL_STATE_UTILITY_W:
+                self.annualStateUtilityRVG.append(RVGs.Uniform(scale=utility, loc=0.5*utility))
+
 
     def get_new_parameters(self, rng):
         """
@@ -133,72 +124,47 @@ class ParameterGenerator:
         # create a parameter set
         param = Parameters(therapy=self.therapy, race=self.race)
 
-        # create beta distributions for mu2/(mu2+mu3) given known (mu2+mu3)
-        fit_output = RVGs.Beta.fit_mm(mean=0.5, st_dev=0.25)
-        if self.race == Races.White:
-            self.transRateMatrixRVG_NO = Data.TRANS_MATRIX_N0_W
-            self.transRateMatrixRVG_NO[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * Data.SUM_W_NO
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_W_NO - self.transRateMatrixRVG_NO[0][2]
+        # calculate transition probabilities
+        prob_matrix = []  # probability matrix without background mortality added
+        # for all health states
+        for s in HealthStates:
+            # if the current state is not death
+            if s not in [HealthStates.CANCER_DEATH, HealthStates.NATUAL_DEATH]:
+                # sample from the dirichlet distribution to find the transition probabilities between breast cancer states
+                # fill in the transition probabilities out of this state
+                prob_matrix.append(self.probMatrixRVG[s.value].sample(rng))
 
-            self.transRateMatrixRVG_BI = Data.TRANS_MATRIX_BI_W
-            self.transRateMatrixRVG_BI[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * \
-                                               Data.SUM_W_BI
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_W_BI - self.transRateMatrixRVG_BI[0][2]
+        # calculate transition rate between breast cancer states
+        param.transRateMatrix = get_trans_rate_matrix(trans_prob_matrix=prob_matrix)
 
-        if self.race == Races.Black:
-            self.transRateMatrixRVG_NO = Data.TRANS_MATRIX_N0_B
-            self.transRateMatrixRVG_NO[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * \
-                                               Data.SUM_B_NO
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_B_NO - self.transRateMatrixRVG_NO[0][2]
-
-            self.transRateMatrixRVG_BI = Data.TRANS_MATRIX_BI_B
-            self.transRateMatrixRVG_BI[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * \
-                                               Data.SUM_B_BI
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_B_BI - self.transRateMatrixRVG_BI[0][2]
-
-        if self.race == Races.AIAN:
-            self.transRateMatrixRVG_NO = Data.TRANS_MATRIX_N0_AIAN
-            self.transRateMatrixRVG_NO[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * \
-                                               Data.SUM_AIAN_NO
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_AIAN_NO - self.transRateMatrixRVG_NO[0][2]
-
-            self.transRateMatrixRVG_BI = Data.TRANS_MATRIX_BI_AIAN
-            self.transRateMatrixRVG_BI[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * \
-                                               Data.SUM_AIAN_BI
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_AIAN_BI - self.transRateMatrixRVG_BI[0][2]
-
-        if self.race == Races.Hispanic:
-            self.transRateMatrixRVG_NO = Data.TRANS_MATRIX_N0_H
-            self.transRateMatrixRVG_NO[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * \
-                                               Data.SUM_H_NO
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_H_NO - self.transRateMatrixRVG_NO[0][2]
-
-            self.transRateMatrixRVG_BI = Data.TRANS_MATRIX_BI_H
-            self.transRateMatrixRVG_BI[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * \
-                                               Data.SUM_H_BI
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_H_BI - self.transRateMatrixRVG_BI[0][2]
-
-        if self.race == Races.API:
-            self.transRateMatrixRVG_NO = Data.TRANS_MATRIX_N0_API
-            self.transRateMatrixRVG_NO[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * \
-                                               Data.SUM_API_NO
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_API_NO - self.transRateMatrixRVG_NO[0][2]
-
-            self.transRateMatrixRVG_BI = Data.TRANS_MATRIX_BI_API
-            self.transRateMatrixRVG_BI[0][2] = RVGs.Beta(a=fit_output["a"], b=fit_output["b"]).sample(rng) * \
-                                               Data.SUM_API_BI
-            self.transRateMatrixRVG_NO[1][2] = Data.SUM_API_BI - self.transRateMatrixRVG_BI[0][2]
-
-        # sample from gamma distributions that are assumed for annual state costs
+        # sample from normal distributions that are assumed for annual state costs
+        param.annualStateCosts = [0]
         for dist in self.annualStateCostRVG:
-            param.annualStateCosts.append(dist.sample(rng))
+            cost = dist.loc
+            fit_cost = dist.sample(rng)
+            if fit_cost < 0.5 * cost:
+                new_cost = 0.5 * cost
+            elif fit_cost > 1.5 * cost:
+                new_cost = 1.5 * cost
+            else:
+                new_cost = fit_cost
+            # append the distribution
+            param.annualStateCosts.append(new_cost)
+        param.annualStateCosts.append(0)
+        param.annualStateCosts.append(0)
 
-        # sample from the gamma distribution that is assumed for the treatment cost
-        param.annualTreatmentCost = self.annualTreatmentCostRVG.sample(rng)
-
-        # sample from beta distributions that are assumed for annual state utilities
+        # sample from uniform distributions that are assumed for annual state utilities
         for dist in self.annualStateUtilityRVG:
-            param.annualStateUtilities.append(dist.sample(rng))
+            utility = dist.loc
+            fit_utility =dist.sample(rng)
+            if fit_utility < 0.5 * utility:
+                new_utility = 0.5 * utility
+            elif fit_utility > min(1, 1.5 * utility):
+                new_utility = min(1, 1.5 * utility)
+            else:
+                new_utility = fit_utility
+            param.annualStateUtilities.append(new_utility)
+
 
         # return the parameter set
         return param

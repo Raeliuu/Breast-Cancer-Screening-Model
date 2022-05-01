@@ -60,6 +60,7 @@ class PatientStateMonitor:
 
         self.currentState = parameters.initialHealthState   # initial health state
         self.survivalTime = None      # survival time
+        self.timeToDiagnosis = None        # time to diagnosis of invasive cancer
         # patient's cost and utility monitor
         self.costUtilityMonitor = PatientCostUtilityMonitor(parameters=parameters)
 
@@ -74,6 +75,9 @@ class PatientStateMonitor:
         if new_state in (HealthStates.CANCER_DEATH, HealthStates.NATUAL_DEATH):
             self.survivalTime = time
 
+        # update time until diagnosis of invasive cancer
+        if self.currentState != HealthStates.LOCAL and new_state == HealthStates.LOCAL:
+            self.timeToDiagnosis = time
 
         # update cost and utility
         self.costUtilityMonitor.update(time=time,
@@ -132,7 +136,7 @@ class Cohort:
         self.id = id
         self.popSize = pop_size
         self.params = parameters
-        self.cohortOutcomes = CohortOutcomes()  # outcomes of the this simulated cohort
+        self.cohortOutcomes = CohortOutcomes()  # outcomes of the simulated cohort
 
     def simulate(self, sim_length):
         """ simulate the cohort of patients over the specified number of time-steps
@@ -161,8 +165,10 @@ class CohortOutcomes:
         self.costs = []                 # patients' discounted costs
         self.utilities =[]              # patients' discounted utilities
         self.nLivingPatients = None     # survival curve (sample path of number of alive patients over time)
+        self.timeToDiagnosis =[]        # patients' time to diagnosis of invasive cancer
 
         self.statSurvivalTime = None    # summary statistics for survival time
+        self.statTimeToDiagnosis = None  # summary statistics for time to diagnosis of invasive cancer
         self.statCost = None            # summary statistics for discounted cost
         self.statUtility = None         # summary statistics for discounted utility
 
@@ -170,10 +176,11 @@ class CohortOutcomes:
         """ extracts outcomes of a simulated patient
         :param simulated_patient: a simulated patient"""
 
-        # record survival time
+        # record survival time and time until invasive cancer
         if simulated_patient.stateMonitor.survivalTime is not None:
             self.survivalTimes.append(simulated_patient.stateMonitor.survivalTime)
-
+        if simulated_patient.stateMonitor.timeToDiagnosis is not None:
+            self.timeToDiagnosis.append(simulated_patient.stateMonitor.timeToDiagnosis)
         # discounted cost and discounted utility
         self.costs.append(simulated_patient.stateMonitor.costUtilityMonitor.totalDiscountedCost)
         self.utilities.append(simulated_patient.stateMonitor.costUtilityMonitor.totalDiscountedUtility)
@@ -185,6 +192,7 @@ class CohortOutcomes:
 
         # summary statistics
         self.statSurvivalTime = Stat.SummaryStat(name='Survival time', data=self.survivalTimes)
+        self.statTimeToDiagnosis = Stat.SummaryStat(name='Time until invasive cancer', data=self.timeToDiagnosis)
         self.statCost = Stat.SummaryStat(name='Discounted cost', data=self.costs)
         self.statUtility = Stat.SummaryStat(name='Discounted utility', data=self.utilities)
 
