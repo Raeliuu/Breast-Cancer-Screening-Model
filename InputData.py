@@ -115,35 +115,35 @@ ANNUAL_STATE_COST = [
 
 # annual health utility of each health state
 ANNUAL_STATE_UTILITY_W = [
-    1,         # Well
+    0.731,         # Well
     0.950,     # Local
     0.887,     # Regional
     0.814,      # Distant
     ]
 
 ANNUAL_STATE_UTILITY_B = [
-    1,         # Well
+    0.814,         # Well
     0.960,     # Local
     0.899,     # Regional
     0.817,      # Distant
     ]
 
 ANNUAL_STATE_UTILITY_AIAN = [
-    1,         # Well
+    0.738,         # Well
     0.950,     # Local
     0.887,     # Regional
     0.812,      # Distant
     ]
 
 ANNUAL_STATE_UTILITY_H = [
-    1,         # Well
+    0.676,         # Well
     0.945,     # Local
     0.852,     # Regional
     0.716,      # Distant
     ]
 
 ANNUAL_STATE_UTILITY_API = [
-    1,         # Well
+    0.738,         # Well
     0.950,     # Local
     0.887,     # Regional
     0.812,      # Distant

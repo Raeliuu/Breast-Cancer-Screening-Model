@@ -17,8 +17,8 @@ def print_outcomes(multi_cohort_outcomes, therapy_name, race):
                                          alpha=D.ALPHA,
                                          deci=2)
 
-    # mean and prediction interval text of time to invasive cancer
-    time_to_Diagnosis_PI_text = multi_cohort_outcomes.statMeanTimeToDiagnosis\
+    # mean and prediction interval text of number of invasive cancer
+    n_Cancer_PI_text = multi_cohort_outcomes.statMeanNCancer\
         .get_formatted_mean_and_interval(interval_type='p',
                                          alpha=D.ALPHA,
                                          deci=2)
@@ -40,8 +40,8 @@ def print_outcomes(multi_cohort_outcomes, therapy_name, race):
     print(therapy_name, '(', race, ')')
     print("  Estimate of mean survival time and {:.{prec}%} uncertainty interval:".format(1 - D.ALPHA, prec=0),
           survival_mean_PI_text)
-    print("  Estimate of mean time to invasive and {:.{prec}%} uncertainty interval:".format(1 - D.ALPHA, prec=0),
-          time_to_Diagnosis_PI_text)
+    print("  Estimate of mean number of invasive cancers and {:.{prec}%} uncertainty interval:".format(1 - D.ALPHA, prec=0),
+          n_Cancer_PI_text)
     print("  Estimate of mean discounted cost and {:.{prec}%} uncertainty interval:".format(1 - D.ALPHA, prec=0),
           cost_mean_PI_text)
     print("  Estimate of mean discounted utility and {:.{prec}%} uncertainty interval:".format(1 - D.ALPHA, prec=0),
@@ -91,19 +91,18 @@ def plot_survival_curves_and_histograms(multi_cohort_outcomes_no, multi_cohort_o
         transparency=0.5
     )
 
-    # histograms of time to invasive cancer
+    # histograms of number of invasive cancer
     set_of_diagnosis_times = [
-        multi_cohort_outcomes_no.meanTimeToDiagnosis,
-        multi_cohort_outcomes_no.meanTimeToDiagnosis
+        multi_cohort_outcomes_no.meanNCancer,
+        multi_cohort_outcomes_no.meanNCancer
     ]
 
     # graph histograms
     Hist.plot_histograms(
         data_sets=set_of_diagnosis_times,
-        title='Histogram of Average Patient Time until Invasive Cancer',
-        x_label='Time until Invasive Cancer (year)',
+        title='Histogram of Average Number of Invasive Cancer',
+        x_label='Number of Invasive Cancer',
         y_label='Counts',
-        bin_width=1,
         legends=['Without Screening', 'Biennial screening'],
         color_codes=['green', 'blue'],
         transparency=0.5
@@ -131,17 +130,18 @@ def print_comparative_outcomes(multi_cohort_outcomes_no, multi_cohort_outcomes_b
           .format(1 - D.ALPHA, prec=0),
           estimate_PI)
 
-    # decrease in mean time until invasive cancer with biennial screening with respect to no screening
-    decrease_mean_time_until_invasive_cancer = Stat.DifferenceStatPaired(
-        name='Increase in mean survival time',
-        x=multi_cohort_outcomes_bi.meanSurvivalTimes,
-        y_ref=multi_cohort_outcomes_no.meanSurvivalTimes)
+    # change in number of invasive cancer with biennial screening with respect to no screening
+    change_in_number_of_invasive_cancer = Stat.DifferenceStatPaired(
+        name='Change in number of cancer',
+        x=multi_cohort_outcomes_bi.meanNCancer,
+        y_ref=multi_cohort_outcomes_no.meanNCancer)
 
     # estimate and PI
-    estimate_PI = decrease_mean_time_until_invasive_cancer.get_formatted_mean_and_interval(interval_type='p',
-                                                                                           alpha=D.ALPHA,
-                                                                                           deci=2)
-    print("Decrease in mean time until invasive cancer and {:.{prec}%} uncertainty interval:"
+    estimate_PI = change_in_number_of_invasive_cancer.get_formatted_mean_and_interval(interval_type='p',
+                                                                                      alpha=D.ALPHA,
+                                                                                      deci=2)
+
+    print("Change in number of invasive cancer and {:.{prec}%} uncertainty interval:"
           .format(1 - D.ALPHA, prec=0),
           estimate_PI)
 

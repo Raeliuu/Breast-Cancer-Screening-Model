@@ -62,12 +62,12 @@ class MultiCohortOutcomes:
 
         self.survivalCurves = []  # list of survival curves from all simulated cohorts
         self.meanSurvivalTimes = []  # list of average patient survival time from each simulated cohort
-        self.meanTimeToDiagnosis = []     # list of average patient time until diagnosis of invasive cancer from each simulated cohort
+        self.meanNCancer = []     # list of average number of diagnosis of invasive cancer from each simulated cohort
         self.meanCosts = []          # list of average patient cost from each simulated cohort
         self.meanQALYs = []          # list of average patient QALY from each simulated cohort
 
         self.statMeanSurvivalTime = None    # summary statistics of average survival time
-        self.statMeanTimeToDiagnosis = None      # summary statistics of average time until diagnosis of invasive cancer
+        self.statMeanNCancer = None      # summary statistics of average number of diagnosis of invasive cancer
         self.statMeanCost = None            # summary statistics of average cost
         self.statMeanQALY = None            # summary statistics of average QALY
 
@@ -81,7 +81,7 @@ class MultiCohortOutcomes:
         # store mean survival time from this cohort
         self.meanSurvivalTimes.append(simulated_cohort.cohortOutcomes.statSurvivalTime.get_mean())
         # store mean time to invasive cancer from this cohort
-        self.meanTimeToDiagnosis.append(simulated_cohort.cohortOutcomes.statTimeToDiagnosis.get_mean())
+        self.meanNCancer.append(simulated_cohort.cohortOutcomes.statNCancer.get_mean())
         # store mean cost from this cohort
         self.meanCosts.append(simulated_cohort.cohortOutcomes.statCost.get_mean())
         # store mean QALY from this cohort
@@ -96,8 +96,8 @@ class MultiCohortOutcomes:
         self.statMeanSurvivalTime = Stat.SummaryStat(name='Average survival time',
                                                      data=self.meanSurvivalTimes)
         # summary statistics of mean time to invasive cancer
-        self.statMeanTimeToDiagnosis = Stat.SummaryStat(name='Average time to invasive breast cancer',
-                                                        data=self.meanTimeToDiagnosis)
+        self.statMeanNCancer = Stat.SummaryStat(name='Average time to invasive breast cancer',
+                                                        data=self.meanNCancer)
         # summary statistics of mean cost
         self.statMeanCost = Stat.SummaryStat(name='Average cost',
                                              data=self.meanCosts)
