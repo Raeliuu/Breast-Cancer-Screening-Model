@@ -61,6 +61,7 @@ class PatientStateMonitor:
         self.currentState = parameters.initialHealthState   # initial health state
         self.survivalTime = None      # survival time
         self.nCancer = 0        # number of cancer
+        self.nCancerDeath = 0        # number of cancer death
         # patient's cost and utility monitor
         self.costUtilityMonitor = PatientCostUtilityMonitor(parameters=parameters)
 
@@ -74,6 +75,10 @@ class PatientStateMonitor:
         # update survival time
         if new_state in (HealthStates.CANCER_DEATH, HealthStates.NATUAL_DEATH):
             self.survivalTime = time
+
+        # update number of diagnosis of invasive cancer
+        if self.currentState != HealthStates.LOCAL and new_state == HealthStates.LOCAL:
+            self.nCancer += 1
 
         # update time until diagnosis of invasive cancer
         if self.currentState != HealthStates.LOCAL and new_state == HealthStates.LOCAL:
@@ -166,6 +171,7 @@ class CohortOutcomes:
         self.utilities =[]              # patients' discounted utilities
         self.nLivingPatients = None     # survival curve (sample path of number of alive patients over time)
         self.nCancer =[]        # number of the diagnosis of invasive cancer
+        self.nCancerDeath = []   # number of cancer death
 
         self.statSurvivalTime = None    # summary statistics for survival time
         self.statNCancer = None  # summary statistics for number of diagnosis of invasive cancer
