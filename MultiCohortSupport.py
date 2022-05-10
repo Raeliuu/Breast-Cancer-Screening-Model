@@ -23,6 +23,12 @@ def print_outcomes(multi_cohort_outcomes, therapy_name, race):
                                          alpha=D.ALPHA,
                                          deci=2)
 
+    # number and confidence interval text of number of invasive cancer death
+    n_Cancer_Death_text = multi_cohort_outcomes.statNCancerDeath\
+        .get_formatted_mean_and_interval(interval_type='c',
+                                         alpha=D.ALPHA,
+                                         deci=2)
+
     # mean and prediction interval text of discounted total cost
     cost_mean_PI_text = multi_cohort_outcomes.statMeanCost\
         .get_formatted_mean_and_interval(interval_type='p',
@@ -145,6 +151,7 @@ def print_comparative_outcomes(multi_cohort_outcomes_no, multi_cohort_outcomes_b
           .format(1 - D.ALPHA, prec=0),
           estimate_PI)
 
+
     # increase in mean discounted cost under combination therapy with respect to mono therapy
     # paired not independent
     increase_mean_discounted_cost = Stat.DifferenceStatPaired(
@@ -204,7 +211,7 @@ def report_CEA_CBA(multi_cohort_outcomes_no, multi_cohort_outcomes_bi):
 
     # show the cost-effectiveness plane
     CEA.plot_CE_plane(
-        title='Cost-Effectiveness Analysis',
+        title='Cost-Effectiveness Analysis (Hispanic)',
         x_label='Additional Discounted QALY',
         y_label='Additional Discounted Cost',
         fig_size=(6, 5),

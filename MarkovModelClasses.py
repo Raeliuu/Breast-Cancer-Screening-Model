@@ -80,9 +80,9 @@ class PatientStateMonitor:
         if self.currentState != HealthStates.LOCAL and new_state == HealthStates.LOCAL:
             self.nCancer += 1
 
-        # update time until diagnosis of invasive cancer
-        if self.currentState != HealthStates.LOCAL and new_state == HealthStates.LOCAL:
-            self.nCancer += 1
+        # update number of cancer death
+        if self.currentState != HealthStates.CANCER_DEATH and new_state == HealthStates.CANCER_DEATH:
+            self.nCancerDeath += 1
 
         # update cost and utility
         self.costUtilityMonitor.update(time=time,
@@ -175,6 +175,7 @@ class CohortOutcomes:
 
         self.statSurvivalTime = None    # summary statistics for survival time
         self.statNCancer = None  # summary statistics for number of diagnosis of invasive cancer
+        self.statNCancerDeath = None  # summary statistics for number of cancer death
         self.statCost = None            # summary statistics for discounted cost
         self.statUtility = None         # summary statistics for discounted utility
 
@@ -182,10 +183,12 @@ class CohortOutcomes:
         """ extracts outcomes of a simulated patient
         :param simulated_patient: a simulated patient"""
 
-        # record survival time and nymber of invasive cancer
+        # record survival time and number of invasive cancer
         if simulated_patient.stateMonitor.survivalTime is not None:
             self.survivalTimes.append(simulated_patient.stateMonitor.survivalTime)
         self.nCancer.append(simulated_patient.stateMonitor.nCancer)
+        self.nCancerDeath.append(simulated_patient.stateMonitor.nCancerDeath)
+
         # discounted cost and discounted utility
         self.costs.append(simulated_patient.stateMonitor.costUtilityMonitor.totalDiscountedCost)
         self.utilities.append(simulated_patient.stateMonitor.costUtilityMonitor.totalDiscountedUtility)
@@ -197,7 +200,8 @@ class CohortOutcomes:
 
         # summary statistics
         self.statSurvivalTime = Stat.SummaryStat(name='Survival time', data=self.survivalTimes)
-        self.statNCancer = Stat.SummaryStat(name='Time until invasive cancer', data=self.nCancer)
+        self.statNCancer = Stat.SummaryStat(name='Number of invasive cancer', data=self.nCancer)
+        self.statNCancerDeath = Stat.SummaryStat(name='Number of cancer death', data=self.nCancerDeath)
         self.statCost = Stat.SummaryStat(name='Discounted cost', data=self.costs)
         self.statUtility = Stat.SummaryStat(name='Discounted utility', data=self.utilities)
 
